@@ -28,12 +28,14 @@
 		"eslint-plugin-svelte": "^2.36.0",
 		"flowbite": "^2.5.2",
 		"flowbite-svelte": "^0.47.1",
+		"flowbite-svelte-icons": "^1.6.2",
 		"globals": "^15.0.0",
 		"mdsvex": "^0.11.2",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"tailwind-merge": "^2.5.4",
 		"tailwindcss": "^3.4.9",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0",
@@ -41,7 +43,6 @@
 	},
 	"dependencies": {
 		"@sveltejs/adapter-node": "^5.2.8",
-		"axios": "^1.7.7",
-		"flowbite-svelte-icons": "^1.6.2"
+		"axios": "^1.7.7"
 	}
 }

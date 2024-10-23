@@ -1,12 +1,19 @@
-import aspectRatio from '@tailwindcss/aspect-ratio';
-import containerQueries from '@tailwindcss/container-queries';
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
-import flowbite from 'flowbite/plugin';
-import type { Config } from 'tailwindcss';
+const config = {
+	content: [
+		'./src/**/*.{html,js,svelte,ts}',
+		'./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'
+	],
 
-export default {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
+	plugins: [
+		require('flowbite/plugin'),
+		require('@tailwindcss/typography'),
+		require('@tailwindcss/forms'),
+		require('@tailwindcss/container-queries'),
+		require('@tailwindcss/aspect-ratio')
+	],
+
+	darkMode: 'class',
+
 	theme: {
 		extend: {
 			fontFamily: {
@@ -143,7 +150,7 @@ export default {
 				}
 			}
 		}
-	},
+	}
+};
 
-	plugins: [flowbite, typography, forms, containerQueries, aspectRatio]
-} as Config;
+module.exports = config;
