@@ -3,7 +3,6 @@
 	import { Toast } from 'flowbite-svelte';
 	import { CheckCircleSolid, ExclamationCircleSolid } from 'flowbite-svelte-icons';
 	import { toasts } from './store';
-	import Header from '$lib/components/ui/Header.svelte';
 
 	let toastDivClass =
 		'w-full max-w-xs p-4 text-gray-500 bg-white shadow-2xl dark:text-gray-400 dark:bg-gray-900 gap-3 ring-gray-800 ring-1';
@@ -26,7 +25,6 @@
 	</div>
 {/if}
 
-<Header></Header>
 <div class="fixed flex h-screen w-full items-center justify-center overflow-y-auto">
 	<slot />
 </div>

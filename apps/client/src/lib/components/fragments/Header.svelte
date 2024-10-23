@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Search } from 'flowbite-svelte';
-	import Button from './Button.svelte';
-	import Logo from './Logo.svelte';
+	import Button from '../ui/Button.svelte';
+	import Logo from '../ui/Logo.svelte';
 </script>
 
 <header
