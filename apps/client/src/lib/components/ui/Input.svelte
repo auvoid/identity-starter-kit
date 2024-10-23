@@ -20,13 +20,11 @@
 	export let value: string;
 	export let classExtras: string = '';
 
-	let inputClass =
-		`focus:border-brand-green focus:ring-brand-green dark:focus:border-brand-green dark:focus:ring-brand-green bg-gray-200 dark:bg-gray-700 ` +
-		classExtras;
+	let inputClass = `focus:border-brand-green focus:ring-brand-green  bg-gray-200 ` + classExtras;
 </script>
 
 <div class="flex gap-1">
-	<Label for="input" class="text-font-bold text-md mb-1 dark:text-gray-300">
+	<Label for="input" class="text-font-bold text-md mb-1">
 		{label}
 	</Label>
 </div>
@@ -49,7 +47,5 @@
 {/if}
 
 {#if helperText}
-	<Helper class="ms-1 text-gray-500 dark:text-gray-400 {variant === 'textarea' ? '' : 'mt-1'}"
-		>{helperText}</Helper
-	>
+	<Helper class="ms-1 text-gray-500 {variant === 'textarea' ? '' : 'mt-1'}">{helperText}</Helper>
 {/if}

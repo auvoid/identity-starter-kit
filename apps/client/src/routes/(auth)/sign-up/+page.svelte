@@ -37,7 +37,7 @@
 </script>
 
 <div class="flex flex-col gap-3">
-	<h1 class="flex self-center text-3xl text-white">Signup</h1>
+	<h1 class="flex self-center text-3xl text-gray-600 font-semibold">Signup</h1>
 	{#if error}
 		<Alert defaultClass="gap-3 p-1 text-sm text-center" color="red">{error}</Alert>
 	{/if}
