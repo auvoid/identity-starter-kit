@@ -3,6 +3,5 @@
 	import Header from '$lib/components/ui/Header.svelte';
 </script>
 
-<Header></Header>
 Hi
 <Badge color="red">A Badge</Badge>
