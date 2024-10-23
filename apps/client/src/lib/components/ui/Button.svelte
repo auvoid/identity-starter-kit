@@ -3,7 +3,7 @@
 	import { Button } from 'flowbite-svelte';
 	import { twMerge } from 'tailwind-merge';
 
-	interface $$Props extends Omit<ComponentProps<Button>, 'color' | 'buttonClass'> {
+	interface $$Props extends Omit<ComponentProps<Button>, 'color'> {
 		color?: 'primary' | 'alternative' | 'none';
 		buttonClass?: string;
 	}
