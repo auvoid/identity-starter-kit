@@ -1,31 +1,15 @@
 <script lang="ts">
-	import { Button, Spinner } from 'flowbite-svelte';
-	import { type ComponentProps, createEventDispatcher } from 'svelte';
+	import type { ComponentProps } from 'svelte';
+	import { Button } from 'flowbite-svelte';
 	import { twMerge } from 'tailwind-merge';
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	interface $$Props extends ComponentProps<Button> {
-		color?: 'primary' | 'alternative';
+	interface $$Props extends Omit<ComponentProps<Button>, 'color'> {
+		color?: 'primary' | 'alternative' | 'none';
+		buttonClass?: string;
 	}
 
 	export let color: $$Props['color'] = 'primary';
 	export let buttonClass = '';
-
-	export let blockingClick: null | (() => Promise<void>) = null;
-
-	const dispatch = createEventDispatcher();
-
-	let isSubmitting = false;
-	async function handleClick() {
-		if (!blockingClick) {
-			dispatch('click');
-			return;
-		}
-		isSubmitting = true;
-		await blockingClick().catch(() => (isSubmitting = false));
-		isSubmitting = false;
-	}
-
 	switch (color) {
 		case 'primary':
 			buttonClass += ' bg-brand-yellow text-gray-800 hover:bg-brand-yellow_hover focus:ring-0';
@@ -42,9 +26,8 @@
 
 <Button
 	class={twMerge(buttonClass, $$restProps.class)}
-	disabled={isSubmitting}
 	{...$$restProps}
-	on:click={handleClick}
+	on:click
 	on:change
 	on:keydown
 	on:keyup
@@ -53,8 +36,5 @@
 	on:mouseenter
 	on:mouseleave
 >
-	{#if isSubmitting}
-		<Spinner class="me-3" size="4" color="white" />
-	{/if}
 	<slot />
 </Button>
