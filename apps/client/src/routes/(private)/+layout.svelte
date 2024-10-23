@@ -2,5 +2,5 @@
 	import Header from '$lib/components/fragments/Header.svelte';
 </script>
 
-<Header />
+<Header></Header>
 <slot />
