@@ -1,6 +1,6 @@
 services:
-  dev-cvc-client:
-    container_name: dev-cvc-client
+  client:
+    container_name: client
     networks:
       - host-bridge
     build:
@@ -20,24 +20,14 @@ services:
         - action: rebuild
           path: ./apps/client/package.json
     depends_on:
-      - dev-auvo-core-api
-  cvc-db:
-    container_name: cvc-db
-    image: postgres:15.4-alpine
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: password
-    volumes:
-      - ./db:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-  dev-cvc-server:
+      - server
+  server:
     networks:
       - host-bridge
-    container_name: dev-cvc-server
+    container_name: server
     build:
       context: .
-      dockerfile: ./docker/dev/Dockerfile.core-api
+      dockerfile: ./docker/dev/Dockerfile.server
     ports:
       - 1209:1209
     develop:
