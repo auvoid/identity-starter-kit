@@ -27,6 +27,6 @@
 {/if}
 
 <Header></Header>
-<div class="dark fixed flex h-screen w-full items-center justify-center overflow-y-auto">
+<div class="fixed flex h-screen w-full items-center justify-center overflow-y-auto">
 	<slot />
 </div>
