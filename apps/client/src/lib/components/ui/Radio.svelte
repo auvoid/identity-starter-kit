@@ -20,7 +20,7 @@
 		{value}
 		{...$$restProps}
 	></Radio>
-	<Label for={`radio-${$$props.label}`} class="text-font-medium text-sm dark:text-gray-300">
+	<Label for={`radio-${$$props.label}`} class="text-font-medium text-sm">
 		{$$props.label}
 	</Label>
 </div>
