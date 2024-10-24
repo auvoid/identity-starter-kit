@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,9 +6,6 @@ import {
   NotFoundException,
   Param,
   Post,
-  Query,
-  Req,
-  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -22,20 +18,11 @@ import {
 import { wsServer } from '../../main';
 import { IdentityService } from '../../services/identity.service';
 import { UserSession } from '../../decorators/UserSession';
-import { Session, User } from '../../entities';
+import { Session } from '../../entities';
 import { SiopOfferService } from './siopOffer.service';
-import { DidsService } from '../dids/dids.service';
 import { CredOfferService } from './credOffer.service';
-import { ApplicationsService } from '../applications/applications.service';
 import { UsersService } from '../users/users.service';
 import { SessionsService } from '../users/sessions.service';
-import { Request } from 'express';
-import { Bitstring } from '@digitalcredentials/bitstring';
-import { getResolver } from '../../utils';
-import { DataSource } from 'typeorm';
-import { Serialize } from '../../middlewares/interceptors/serialize.interceptors';
-import { errors } from '../../errors';
-import { PresentationDefinitionV2 } from '@sphereon/pex-models';
 import {
   SiopOfferDTO,
   TokenResponseDTO,
@@ -44,6 +31,9 @@ import {
   BaseCredOfferDTO,
   SiopRequestDTO,
 } from '@repo/dtos';
+import { DataSource } from 'typeorm';
+import { Serialize } from 'src/middlewares/interceptors/serialize.interceptors';
+import { PresentationDefinitionV2 } from '@sphereon/pex-models';
 
 @ApiTags('OpenID')
 @ApiExcludeController()
@@ -55,21 +45,14 @@ export class Oid4vcController {
     private credOfferService: CredOfferService,
     private usersService: UsersService,
     private sessionsService: SessionsService,
-    private didsService: DidsService,
     private dataSource: DataSource,
-    private applicationsService: ApplicationsService,
   ) {}
 
   @Serialize(SiopOfferDTO)
   @ApiOkResponse({ type: SiopOfferDTO })
   @Get('/siop')
-  async newSiopRequest(
-    @UserSession() session: Session,
-    @Query('applicationId') applicationId: string | null = null,
-  ) {
-    const state = applicationId
-      ? `${session.id}::${applicationId}`
-      : session.id;
+  async newSiopRequest(@UserSession() session: Session) {
+    const state = session.id;
     const siopRequest = await (
       await this.identityService.getAdminDid()
     ).rp.createRequest({
@@ -81,20 +64,16 @@ export class Oid4vcController {
       ).toString(),
       responseType: 'id_token',
     });
-    const application = applicationId
-      ? await this.applicationsService.findById(applicationId)
-      : null;
+
     const offerExists = await this.siopOfferService.findById(session.id);
     if (offerExists) {
       await this.siopOfferService.findByIdAndUpdate(session.id, {
         request: siopRequest.request,
-        application,
       });
     } else {
       await this.siopOfferService.create({
         id: session.id,
         request: siopRequest.request,
-        application,
       });
     }
     return siopRequest;
@@ -117,64 +96,59 @@ export class Oid4vcController {
     @Param('identity') identity: string,
     @Body() body: TokenRequestDTO,
   ) {
-    const didConfig = await this.didsService.findOne({
-      url: identity,
-    });
-    const { issuer } = await this.identityService.getDid({
-      did: didConfig.did,
-    });
+    const { issuer } = await this.identityService.getAdminDid();
     const response = await issuer.createTokenResponse(body);
     return response;
   }
 
-  //   @Serialize(CredOfferDTO)
-  //   @ApiOkResponse({ type: CredOfferDTO })
-  //   @ApiNotFoundResponse({ type: NotFoundException })
-  //   @Get('/credentials/:id')
-  //   async createCredentialOffer(
-  //     @Param('id') id: string,
-  //     @UserSession() session: Session,
-  //   ) {
-  //     const application = await this.applicationsService.findById(id, {
-  //       template: {
-  //         defaultSigningIdentity: true,
-  //       },
-  //       user: true,
-  //       organization: true,
-  //     });
-  //     if (application.status !== 'approved')
-  //       throw new BadRequestException(errors.oid.NOT_APPROVED);
-  //     const { issuer } = await this.identityService.getDid({
-  //       did: application.template.defaultSigningIdentity.did,
-  //     });
+  // @Serialize(CredOfferDTO)
+  // @ApiOkResponse({ type: CredOfferDTO })
+  // @ApiNotFoundResponse({ type: NotFoundException })
+  // @Get('/credentials/:id')
+  // async createCredentialOffer(
+  //   @Param('id') id: string,
+  //   @UserSession() session: Session,
+  // ) {
+  //   const application = await this.applicationsService.findById(id, {
+  //     template: {
+  //       defaultSigningIdentity: true,
+  //     },
+  //     user: true,
+  //     organization: true,
+  //   });
+  //   if (application.status !== 'approved')
+  //     throw new BadRequestException(errors.oid.NOT_APPROVED);
+  //   const { issuer } = await this.identityService.getDid({
+  //     did: application.template.defaultSigningIdentity.did,
+  //   });
 
-  //     const offer = await issuer.createCredentialOffer(
-  //       {
-  //         credentials: [application.template.name],
-  //         requestBy: 'reference',
-  //         credentialOfferUri: new URL(
-  //           `/api/oid4vc/offers/${id}`,
-  //           process.env.PUBLIC_BASE_URI,
-  //         ).toString(),
-  //         pinRequired: false,
-  //       },
-  //       {
-  //         applicationId: application.id,
-  //         state: session.id,
-  //       },
-  //     );
-  //     const offerExists = await this.credOfferService.findById(id);
-  //     if (!offerExists) {
-  //       await this.credOfferService
-  //         .create({ id, offer: offer.offer })
-  //         .catch(() => null);
-  //     } else {
-  //       await this.credOfferService.findByIdAndUpdate(id, {
-  //         offer: offer.offer,
-  //       });
-  //     }
-  //     return offer;
+  //   const offer = await issuer.createCredentialOffer(
+  //     {
+  //       credentials: [application.template.name],
+  //       requestBy: 'reference',
+  //       credentialOfferUri: new URL(
+  //         `/api/oid4vc/offers/${id}`,
+  //         process.env.PUBLIC_BASE_URI,
+  //       ).toString(),
+  //       pinRequired: false,
+  //     },
+  //     {
+  //       applicationId: application.id,
+  //       state: session.id,
+  //     },
+  //   );
+  //   const offerExists = await this.credOfferService.findById(id);
+  //   if (!offerExists) {
+  //     await this.credOfferService
+  //       .create({ id, offer: offer.offer })
+  //       .catch(() => null);
+  //   } else {
+  //     await this.credOfferService.findByIdAndUpdate(id, {
+  //       offer: offer.offer,
+  //     });
   //   }
+  //   return offer;
+  // }
 
   @Serialize(BaseCredOfferDTO)
   @Get('/offers/:id')
@@ -332,91 +306,9 @@ export class Oid4vcController {
     const { state } = body;
     const { id_token: idToken, vp_token: vpToken } = body;
     if (idToken) {
-      const isFlowLoginAttempt = state.includes('::');
       const { rp } = await this.identityService.getAdminDid();
       await rp.verifyAuthResponse(body);
       const { iss } = await rp.validateJwt(idToken);
-
-      if (isFlowLoginAttempt) {
-        // const [sessionId, applicationId] = state.split('::');
-        // const application = await this.applicationsService.findById(
-        //   applicationId,
-        //   {
-        //     flow: { steps: true },
-        //     stepActions: true,
-        //   },
-        // );
-        // const currentStepIndex = application.stepActions.length;
-        // const currentStepConfig = application.flow.steps.find(
-        //   (s) => s.index === currentStepIndex,
-        // );
-        // await this.stepActionsService.create({
-        //   stepConfig: currentStepConfig,
-        //   status: 'proceed',
-        //   application,
-        //   metadata: {
-        //     did: iss,
-        //   },
-        // });
-        // wsServer.broadcast(sessionId, { shared: true });
-      } else {
-        let user = await this.usersService.findOne({ did: iss });
-
-        // in case existing user tries signing up again
-        if (user) {
-          await this.sessionsService.findByIdAndUpdate(state, {
-            isValid: true,
-            did: iss,
-            user,
-          });
-          wsServer.broadcast(state, {
-            error: 'User already exists!',
-            login: !!user.email || !!user.organization,
-            user,
-          });
-          return {};
-        } else user = await this.usersService.create({ did: iss });
-        await this.sessionsService.findByIdAndUpdate(state, {
-          isValid: true,
-          did: iss,
-          user,
-        });
-        wsServer.broadcast(state, {
-          login: !!user.email || !!user.organization,
-          user,
-        });
-      }
-
-      return {};
-    } else {
-      const { rp } = await this.identityService.getAdminDid();
-
-      const sessionId = state.split('::')[0];
-      const siopId = state.split('::')[1];
-
-      const siopSession = await this.siopOfferService.findById(siopId, {
-        application: { flow: { steps: true }, stepActions: true },
-      });
-
-      const { iss } = await rp.validateJwt(vpToken);
-      const currentStepIndex = siopSession.application.stepActions.length;
-      const currentStepConfig = siopSession.application.flow.steps.find(
-        (s) => s.index === currentStepIndex,
-      );
-
-      await rp.verifyAuthResponse(
-        body,
-        siopSession.pex as PresentationDefinitionV2,
-      );
-      //   await this.stepActionsService.create({
-      //     stepConfig: currentStepConfig,
-      //     status: 'proceed',
-      //     application: siopSession.application,
-      //     metadata: {
-      //       did: iss,
-      //     },
-      //   });
-      wsServer.broadcast(sessionId, { shared: true });
     }
   }
 }

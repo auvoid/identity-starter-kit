@@ -11,7 +11,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { CurrentUser } from '../../decorators';
-import { NotificationPreference, Session, User } from '../../entities';
+import { Session, User } from '../../entities';
 import { IsAuthenticated } from '../../middlewares/guards';
 import { Response } from 'express';
 import { SessionsService } from './sessions.service';
@@ -24,8 +24,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { UserNotificationsService } from './user-notifications.service';
-import { NotificationPreferencesService } from './notification-preference.service';
 import { PAGE_SIZE } from '../../config/conf';
 import {
   createJsonWebToken,
@@ -42,8 +40,6 @@ export class UsersController {
   constructor(
     private sessionService: SessionsService,
     private usersService: UsersService,
-    private userNotificationsService: UserNotificationsService,
-    private notificationPreferencesService: NotificationPreferencesService,
     private emailService: EmailService,
   ) {}
 
@@ -51,10 +47,8 @@ export class UsersController {
   @IsAuthenticated()
   @ApiCookieAuth()
   async getCurrentUser(@CurrentUser() user: User) {
-    const unread = await this.userNotificationsService.getUnreadCount(user.id);
     return {
       ...user,
-      unread: unread > 0,
     };
   }
 
@@ -93,24 +87,6 @@ export class UsersController {
     return;
   }
 
-  @Post('/rotate')
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  async requestKeyRotation(@CurrentUser() user: User) {
-    const rotationSecret = createJsonWebToken({
-      scope: 'rotation',
-      id: user.id,
-    });
-    const encodedUrl = new URL(
-      '/rotate-user-did?token=' + rotationSecret,
-      process.env.PUBLIC_CLIENT_URI,
-    ).toString();
-    await this.emailService.sendUserDidRotateEmail({
-      url: encodedUrl,
-      user,
-    });
-  }
-
   @Post('/rotate-did')
   @IsAuthenticated()
   @ApiCookieAuth()
@@ -123,82 +99,14 @@ export class UsersController {
     if (payload.scope !== 'rotation')
       throw new BadRequestException(errors.users.INVALID_SCOPE);
     console.log(body.did);
-    const _didExists = await this.usersService.findOne(
-      { did: body.did },
-      { organization: true },
-    );
-    if (!_didExists.email && !_didExists.organization) {
+    const _didExists = await this.usersService.findOne({ did: body.did });
+    if (!_didExists.email) {
       await this.usersService.findByIdAndDelete(_didExists.id);
     }
     const _user = await this.usersService.findByIdAndUpdate(user.id, {
       did: body.did,
     });
     return _user;
-  }
-
-  @Get('/notifications')
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  async getNotifications(
-    @CurrentUser() user: User,
-    @Query('page') page: string | number,
-  ) {
-    page = page ? parseInt(page as string) : 1;
-
-    const [applications, count] =
-      await this.userNotificationsService.findManyAndCount(
-        {
-          userSubject: { id: user.id },
-        },
-        {
-          application: true,
-          organization: true,
-          template: true,
-          userTarget: true,
-        },
-        { createdAt: 'DESC' },
-        { take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE },
-      );
-    const ids = applications.map((a) => a.id);
-    await this.userNotificationsService.markAsRead(ids);
-    const paginated = paginate(applications, page, count);
-    return paginated;
-  }
-
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  @Patch('/notifications/preferences')
-  async notificationPreferences(@CurrentUser() user: User, @Body() body: any) {
-    let preferences: NotificationPreference;
-    const { notificationPreferences: _preferences } =
-      await this.usersService.findById(user.id, {
-        notificationPreferences: true,
-      });
-    if (_preferences) {
-      preferences = await this.notificationPreferencesService.findByIdAndUpdate(
-        _preferences.id,
-        body,
-      );
-    } else {
-      preferences = await this.notificationPreferencesService.create(body);
-      await this.usersService.findByIdAndUpdate(user.id, {
-        notificationPreferences: preferences,
-      });
-    }
-    return preferences;
-  }
-
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  @Get('/notifications/preferences')
-  async getNotificationPreferences(@CurrentUser() user: User) {
-    const { notificationPreferences } = await this.usersService.findById(
-      user.id,
-      {
-        notificationPreferences: true,
-      },
-    );
-    return notificationPreferences;
   }
 
   @IsAuthenticated()

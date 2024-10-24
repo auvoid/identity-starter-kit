@@ -8,8 +8,6 @@ import { promises } from 'fs';
 import path from 'path';
 
 import { getResolver } from '../utils';
-import { DidsService } from '../modules/dids/dids.service';
-import { OrganizationService } from '../modules/organization/organization.service';
 import { Injectable } from '@nestjs/common';
 import nacl from 'tweetnacl';
 import axios from 'axios';
@@ -43,10 +41,7 @@ export class IdentityService {
   manager: IdentityManager<IdentityAccount>;
   storage: StorageSpec<any, any>;
 
-  constructor(
-    private didService: DidsService,
-    private organizationService: OrganizationService,
-  ) {
+  constructor() {
     this.build();
   }
 
@@ -99,22 +94,14 @@ export class IdentityService {
       VcIssuer,
     } = await import('@tanglelabs/oid4vc');
     const config = await this.manager.storage.findOne({ did });
-    const identity = await this.didService.findOne(
-      { did },
-      { organization: true },
-    );
-    const org = identity ? identity.organization : null;
+
+    const org = null;
     const resolver = await getResolver();
 
-    const logo =
-      identity && identity.logo
-        ? identity.logo
-        : org
-          ? org.logo
-          : new URL(
-              '/images/Logo.png',
-              process.env.PUBLIC_CLIENT_URI,
-            ).toString();
+    const logo = new URL(
+      '/images/Logo.png',
+      process.env.PUBLIC_CLIENT_URI,
+    ).toString();
     const document = await account.getDocument();
     const kid = document.verificationMethod[0].id;
     const signer = await this.buildSigner(config.seed);
@@ -130,7 +117,7 @@ export class IdentityService {
         subjectSyntaxTypesSupported: ['did:key'],
         idTokenSigningAlgValuesSupported: [SigningAlgs.EdDSA],
         clientName: org ? org.name : 'AuvoID',
-        logoUri: identity?.logo ?? org?.logo ?? logo,
+        logoUri: logo,
       },
     });
     const holder = new VcHolder({
@@ -158,14 +145,11 @@ export class IdentityService {
       kid,
       resolver,
       tokenEndpoint: new URL(
-        `/api/oid4vc/${identity ? identity.url : config.alias}/token`,
+        `/api/oid4vc/token`,
         process.env.PUBLIC_BASE_URI,
       ).toString(),
-      logoUri: identity?.logo ?? org?.logo ?? logo,
-      credentialIssuer: new URL(
-        `/api/${identity ? identity.url : config.alias}`,
-        process.env.PUBLIC_BASE_URI,
-      ).toString(),
+      logoUri: logo,
+      credentialIssuer: new URL(`/api`, process.env.PUBLIC_BASE_URI).toString(),
       proofTypesSupported: ['jwt'],
       store: new SimpleStore({ reader, writer }),
     });
@@ -209,7 +193,7 @@ export class IdentityService {
     return this._enrichAccountWithRelyingPartyAndIssuer(did, did.getDid());
   }
 
-  async getDid(props: { alias?: string; did?: string }) {
+  private async getDid(props: { alias?: string; did?: string }) {
     const did = await this.manager.getDid({
       ...props,
       store: this.storage,

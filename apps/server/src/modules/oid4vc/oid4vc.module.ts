@@ -4,13 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CredOffer, SiopOffer } from '../../entities';
 import { SiopOfferService } from './siopOffer.service';
 import { CredOfferService } from './credOffer.service';
-import { DidsModule } from '../dids/dids.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SiopOffer, CredOffer]),
-    DidsModule,
     forwardRef(() => UsersModule),
   ],
   controllers: [Oid4vcController],
