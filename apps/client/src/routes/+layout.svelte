@@ -3,8 +3,9 @@
 	import { Toast } from 'flowbite-svelte';
 	import { CheckCircleSolid, ExclamationCircleSolid } from 'flowbite-svelte-icons';
 	import { toasts } from './store';
-	import Header from '$lib/components/ui/Header.svelte';
+	import Header from '$lib/components/fragments/Header.svelte';
 	import Sidebar from '$lib/components/ui/Sidebar.svelte';
+	import DocPreviewBar from '$lib/components/fragments/DocPreviewBar.svelte';
 
 	let toastDivClass = 'w-full max-w-xs p-4 text-gray-500 bg-white shadow-2xl ring-gray-800 ring-1';
 </script>

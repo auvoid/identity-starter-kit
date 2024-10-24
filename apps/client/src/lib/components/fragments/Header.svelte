@@ -5,9 +5,12 @@
 </script>
 
 <header
-	class="fixed z-[10] flex h-16 w-screen justify-between items-center border-b-[1px] gap-3 border-gray-200 bg-white p-2 pl-3 shadow-lg border"
+	class="fixed z-[10] flex h-16 w-screen justify-between items-center border-b-[1px] gap-3 border-gray-200 bg-white p-2 pl-3 shadow-lg border px-5"
 >
-	<Logo></Logo>
+	<div class="flex gap-2 items-center">
+		<Logo></Logo>
+		<h1 class="text-2xl font-semibold select-none text-gray-700">Syner</h1>
+	</div>
 	<div class="w-2/5">
 		<Search
 			class="w-full text-ellipsis rounded-lg py-[12px] focus:border-brand-green focus:ring-brand-green"

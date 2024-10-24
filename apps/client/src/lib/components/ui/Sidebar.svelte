@@ -3,7 +3,7 @@
 	import { Avatar, Sidebar, SidebarGroup, SidebarItem, SidebarWrapper } from 'flowbite-svelte';
 	import {
 		ChartPieSolid,
-		InboxFullOutline,
+		InboxFullSolid,
 		BookSolid,
 		UserSettingsSolid,
 		LifeSaverSolid
@@ -11,19 +11,6 @@
 
 	$: activeUrl = $page.url.pathname;
 </script>
-
-<!-- <Sidebar
-	class="fixed bottom-6 top-[88px] z-[10] flex w-64 flex-col justify-between gap-6 overflow-x-hidden overflow-y-scroll bg-white px-3 py-6 text-base font-medium"
->
-	<SidebarWrapper>
-		<div class="flex flex-col gap-6">
-			<div class="flex items-center gap-3">
-				<Avatar rounded class="object-cover" src="" />
-				<h2 class="text-2xl font-semibold">User name</h2>
-			</div>
-		</div>
-	</SidebarWrapper>
-</Sidebar> -->
 
 <Sidebar {activeUrl}>
 	<SidebarWrapper
@@ -46,7 +33,7 @@
 				</SidebarItem>
 				<SidebarItem label="Notification">
 					<svelte:fragment slot="icon">
-						<InboxFullOutline
+						<InboxFullSolid
 							class="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900"
 						/>
 					</svelte:fragment>
