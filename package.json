@@ -15,5 +15,8 @@
     "format": "pnpm -F=* format",
     "lint": "pnpm -F=* lint",
     "dev": "docker compose -f ./dev.docker-compose.yml up"
+  },
+  "dependencies": {
+    "moment": "^2.30.1"
   }
 }

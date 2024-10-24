@@ -27,7 +27,7 @@
 				<SidebarItem label="Documents">
 					<svelte:fragment slot="icon">
 						<ChartPieSolid
-							class="w-6 h-6 text-gray-500 transition duration-75  group-hover:text-gray-900"
+							class="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900"
 						/>
 					</svelte:fragment>
 				</SidebarItem>
@@ -39,7 +39,7 @@
 					</svelte:fragment>
 					<svelte:fragment slot="subtext">
 						<span
-							class=" text-red-700 ms-3 inline-flex h-3 w-3 items-center justify-center rounded-full bg-red-200 p-3 text-sm font-medium"
+							class="text-red-700 ms-3 inline-flex h-3 w-3 items-center justify-center rounded-full bg-red-200 p-3 text-sm font-medium"
 						>
 							1
 						</span>
