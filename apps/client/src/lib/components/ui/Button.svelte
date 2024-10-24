@@ -16,7 +16,7 @@
 			break;
 		case 'alternative':
 			buttonClass +=
-				' dark:bg-gray-800 bg-gray-50 text-gray-800 dark:text-gray-400 border-[1px] dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-0 border-gray-300';
+				' bg-gray-50 text-gray-800 border-[1px] hover:bg-gray-100 focus:ring-0 border-gray-300';
 			break;
 		default:
 			buttonClass += '';

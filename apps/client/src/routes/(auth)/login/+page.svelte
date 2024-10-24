@@ -44,7 +44,7 @@
 		<Button buttonClass="w-full" color="primary" on:click={handleLogin}>Login</Button>
 		<Button buttonClass="w-full" color="alternative" on:click={() => goto('/')}>Cancel</Button>
 	</div>
-	<small class="w-full dark:text-white">
+	<small class="w-full">
 		<p>Don't have an account? <a class="text-brand-green" href="/sign-up">Signup</a></p>
 	</small>
 </div>
