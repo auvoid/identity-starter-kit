@@ -11,9 +11,8 @@ import {
   Res,
 } from '@nestjs/common';
 import { CurrentUser } from '../../decorators';
-import { Session, User } from '../../entities';
+import { NotificationPreference, Session, User } from '../../entities';
 import { IsAuthenticated } from '../../middlewares/guards';
-import { OrganizationService } from '../organization/organization.service';
 import { Response } from 'express';
 import { SessionsService } from './sessions.service';
 import { UserSession } from '../../decorators';
@@ -42,7 +41,6 @@ import { errors } from '../../errors';
 export class UsersController {
   constructor(
     private sessionService: SessionsService,
-    private organizationService: OrganizationService,
     private usersService: UsersService,
     private userNotificationsService: UserNotificationsService,
     private notificationPreferencesService: NotificationPreferencesService,
@@ -53,33 +51,10 @@ export class UsersController {
   @IsAuthenticated()
   @ApiCookieAuth()
   async getCurrentUser(@CurrentUser() user: User) {
-    const organization = await this.organizationService
-      .findById(user.organization?.id, {
-        ownedBy: true,
-        subscription: true,
-      })
-      .catch(() => null);
-    const isOwner = !!organization && organization?.ownedBy?.id === user.id;
-    if (isOwner) {
-      user.role = {
-        ...user.role,
-        manageTemplates: true,
-        manageApplications: true,
-        manageOrganization: true,
-        manageOrganizationCredentials: true,
-        manageOrganizationId: true,
-        manageOrganizationProfiles: true,
-        manageRoles: true,
-        manageStaff: true,
-        manageExtensions: true,
-      };
-    }
     const unread = await this.userNotificationsService.getUnreadCount(user.id);
     return {
       ...user,
       unread: unread > 0,
-      isOwner,
-      subscribed: organization?.subscription?.subscribed,
     };
   }
 
@@ -194,7 +169,7 @@ export class UsersController {
   @ApiCookieAuth()
   @Patch('/notifications/preferences')
   async notificationPreferences(@CurrentUser() user: User, @Body() body: any) {
-    let preferences: NotificationPreferences;
+    let preferences: NotificationPreference;
     const { notificationPreferences: _preferences } =
       await this.usersService.findById(user.id, {
         notificationPreferences: true,

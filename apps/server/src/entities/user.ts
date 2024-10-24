@@ -11,6 +11,7 @@ import { hash, verify } from 'argon2';
 import { Notification } from './notification';
 import { BaseEntity } from './base-entity';
 import { Session } from './session';
+import { Application } from './application';
 
 @Entity()
 export class User extends BaseEntity {
@@ -28,6 +29,12 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Notification, (e) => e.userSubject)
   notifications: Relation<Notification[]>;
+
+  @Column({ default: false, nullable: false })
+  emailVerified: boolean;
+
+  @OneToMany(() => Application, (e) => e.user)
+  applications: Relation<Application[]>;
 
   private tempPassword: string;
   @AfterLoad()
