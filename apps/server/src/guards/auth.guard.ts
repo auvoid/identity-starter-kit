@@ -7,7 +7,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { UserService } from '../modules/users/users.service';
+import { UsersService } from '../modules/users/users.service';
 import { validateJsonWebToken } from '../utils/jwt';
 
 export function IsAuthenticated() {
@@ -16,7 +16,7 @@ export function IsAuthenticated() {
 
 @Injectable()
 export class CurrentUserInterceptor implements NestInterceptor {
-  constructor(private userService: UserService) {}
+  constructor(private userService: UsersService) {}
 
   async intercept(
     context: ExecutionContext,
