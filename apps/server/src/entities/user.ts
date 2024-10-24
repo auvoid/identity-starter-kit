@@ -4,7 +4,9 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   Relation,
 } from 'typeorm';
 import { hash, verify } from 'argon2';
@@ -12,6 +14,7 @@ import { Notification } from './notification';
 import { BaseEntity } from './base-entity';
 import { Session } from './session';
 import { Application } from './application';
+import { NotificationPreference } from './notification-preference';
 
 @Entity()
 export class User extends BaseEntity {
@@ -29,6 +32,10 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Notification, (e) => e.userSubject)
   notifications: Relation<Notification[]>;
+
+  @OneToOne(() => NotificationPreference)
+  @JoinColumn()
+  notificationPreferences: Relation<NotificationPreference>;
 
   @Column({ default: false, nullable: false })
   emailVerified: boolean;
