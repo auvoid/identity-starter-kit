@@ -6,7 +6,7 @@
 	// export let selectedDoc: string;
 </script>
 
-<Card class="min-w-[450px] shadow-xl h-[calc(100vh-130px)] fixed top-[88px] right-5">
+<Card class="min-w-[450px] shadow-xl h-[calc(100vh-130px)]">
 	<!-- {#if selectedDoc} -->
 	<div class="flex flex-col h-full justify-between">
 		<div class="flex flex-col gap-4">
