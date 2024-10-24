@@ -3,59 +3,66 @@ import {
   Body,
   ConflictException,
   Controller,
-  ForbiddenException,
   Get,
   Patch,
   Post,
-  Query,
   Res,
 } from '@nestjs/common';
-import { CurrentUser } from '../../decorators';
-import { Session, User } from '../../entities';
-import { IsAuthenticated } from '../../middlewares/guards';
-import { Response } from 'express';
-import { SessionsService } from './sessions.service';
-import { UserSession } from '../../decorators';
-import {
-  ApiCookieAuth,
-  ApiExcludeController,
-  ApiOperation,
-  ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { PAGE_SIZE } from '../../config/conf';
-import {
-  createJsonWebToken,
-  paginate,
-  validateJsonWebToken,
-} from '../../utils';
+import { SessionsService } from './sessions.service';
 import { EmailService } from '../email/email.service';
+import { createJsonWebToken, validateJsonWebToken } from '../../utils/jwt';
+import { IsAuthenticated } from '../../guards/auth.guard';
+import { CurrentUser } from '../../decorators/user';
+import { User } from '../../entities/user';
+import {
+  CreateUserDTO,
+  LoginUserDTO,
+  UpdateUserDTO,
+  UserDTO,
+} from '@repo/dtos';
+import { Serialize } from '../../interceptors/serialize';
+import { ApiCookieAuth } from '@nestjs/swagger';
+import { UserSession } from '../../decorators';
+import { Session } from '../../entities';
 import { errors } from '../../errors';
+import type { Response } from 'express';
 
-@ApiExcludeController()
-@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(
+    private userService: UsersService,
     private sessionService: SessionsService,
-    private usersService: UsersService,
     private emailService: EmailService,
   ) {}
 
-  @Get('/')
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  async getCurrentUser(@CurrentUser() user: User) {
-    return {
-      ...user,
-    };
+  @Post()
+  @Serialize(UserDTO)
+  async createNewUser(@Body() body: CreateUserDTO) {
+    const { email, password } = body;
+    const _userExists = await this.userService.findOne({ email });
+    if (_userExists) throw new BadRequestException('email already exists');
+
+    const user = await this.userService.create({
+      email,
+      password,
+    });
+    return user;
   }
 
-  @ApiOperation({ summary: 'Get the current user cookie session' })
-  @Get('/session')
-  async getCurrentSession(@UserSession() session: Session) {
-    return session;
+  @Get()
+  async getUser(@CurrentUser() user: User) {
+    return user;
+  }
+
+  @Post('/login')
+  async loginUser(@Body() body: LoginUserDTO) {
+    const { email, password } = body;
+    const user = await this.userService.findOne({ email });
+    if (!(await user.verifyPassword(password))) throw new BadRequestException();
+    return {
+      token: createJsonWebToken({ scope: 'auth', userId: user.id }, '1y'),
+    };
   }
 
   @Patch()
@@ -65,7 +72,7 @@ export class UsersController {
     @CurrentUser() user: User,
     @Body() body: Partial<User>,
   ) {
-    return await this.usersService.findByIdAndUpdate(user.id, body);
+    return await this.userService.findByIdAndUpdate(user.id, body);
   }
 
   @Get('/logout')
@@ -87,33 +94,19 @@ export class UsersController {
     return;
   }
 
-  @Post('/rotate-did')
+  @Get('/')
   @IsAuthenticated()
   @ApiCookieAuth()
-  async rotateKeyForUser(
-    @Body() body: { token: string; did: string },
-    @CurrentUser() user: User,
-  ) {
-    const { payload, expired } = validateJsonWebToken(body.token);
-    if (expired) throw new BadRequestException(errors.users.EXPIRED_TOKEN);
-    if (payload.scope !== 'rotation')
-      throw new BadRequestException(errors.users.INVALID_SCOPE);
-    console.log(body.did);
-    const _didExists = await this.usersService.findOne({ did: body.did });
-    if (!_didExists.email) {
-      await this.usersService.findByIdAndDelete(_didExists.id);
-    }
-    const _user = await this.usersService.findByIdAndUpdate(user.id, {
-      did: body.did,
-    });
-    return _user;
+  async getCurrentUser(@CurrentUser() user: User) {
+    return {
+      ...user,
+    };
   }
 
   @IsAuthenticated()
   @ApiCookieAuth()
   @Get('verify-email')
   async verifyEmail(@CurrentUser() user: User) {
-    // Check if already verified
     const isAlreadyVerified = (await this.getCurrentUser(user)).emailVerified;
 
     if (isAlreadyVerified)
@@ -138,26 +131,19 @@ export class UsersController {
     if (payload.userId !== user.id)
       throw new BadRequestException(errors.users.BAD_EMAIL_VERIFICATION);
 
-    await this.usersService.findByIdAndUpdate(user.id, {
+    await this.userService.findByIdAndUpdate(user.id, {
       emailVerified: true,
     });
   }
 
-  @IsAuthenticated()
-  @ApiCookieAuth()
-  @ApiSecurity('API Key')
-  @Post('/token')
-  async exchangeSingleUseTokenForAccessToken(@Body('token') token: string) {
-    const { payload, expired } = validateJsonWebToken(token);
-    if (!payload || expired) throw new BadRequestException();
-    if (payload.scope !== 'temporary-auth') throw new ForbiddenException();
-    const accessToken = createJsonWebToken(
-      {
-        applicationId: payload.applicationId,
-        scope: 'flow-user-access-token',
-      },
-      '1y',
-    );
-    return { accessToken };
+  @Serialize(UserDTO)
+  async updateUser(@CurrentUser() user: User, @Body() body: UpdateUserDTO) {
+    const { password, oldPassword } = body;
+    const isValidPassword = await user.verifyPassword(oldPassword);
+    if (!isValidPassword) throw new BadRequestException();
+    const updated = await this.userService.findByIdAndUpdate(user.id, {
+      password,
+    });
+    return updated;
   }
 }
