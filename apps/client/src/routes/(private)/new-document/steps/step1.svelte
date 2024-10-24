@@ -48,7 +48,7 @@
 				</div>
 				<div class="flex gap-5 w-full">
 					<div class="w-full">
-						<Dropzone accept={'.pdf'}>
+						<Dropzone class="bg-gray-200" accept={'.pdf'}>
 							<UploadOutline size="xl"></UploadOutline>
 							<p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
 								<span class="font-semibold">Click to upload</span> or drag and drop
@@ -61,11 +61,7 @@
 					<div class="w-full">
 						<div>
 							<Label for="input" class="text-font-bold text-md mb-1">Your Message</Label>
-							<Textarea
-								unWrappedClass="focus:border-brand-green focus:ring-brand-green bg-gray-200 "
-								placeholder="Write text here..."
-								rows={6}
-							>
+							<Textarea class="bg-gray-200" placeholder="Write text here..." rows={6}>
 								<Toolbar slot="header" embedded>
 									<ToolbarGroup>
 										<ToolbarButton name="Attach file"
