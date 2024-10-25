@@ -14,7 +14,7 @@
 
 <Sidebar {activeUrl}>
 	<SidebarWrapper
-		class="shadow-xl h-[calc(100vh-130px)] fixed top-[88px] w-64 bg-white border flex flex-col justify-between"
+		class="shadow-xl h-[calc(100vh-130px)] w-64 bg-white border flex flex-col justify-between"
 	>
 		<div>
 			<SidebarGroup>

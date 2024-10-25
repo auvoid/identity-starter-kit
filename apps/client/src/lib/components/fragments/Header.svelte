@@ -2,6 +2,7 @@
 	import { Search } from 'flowbite-svelte';
 	import Button from '../ui/Button.svelte';
 	import Logo from '../ui/Logo.svelte';
+	import { goto } from '$app/navigation';
 </script>
 
 <header
@@ -18,6 +19,6 @@
 		></Search>
 	</div>
 	<div>
-		<Button color="yellow">Create New Document</Button>
+		<Button color="yellow" on on:click={() => goto('/new-document')}>Create New Document</Button>
 	</div>
 </header>
