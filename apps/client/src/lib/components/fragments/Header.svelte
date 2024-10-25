@@ -18,6 +18,6 @@
 		></Search>
 	</div>
 	<div>
-		<Button>Create New Document</Button>
+		<Button color="yellow">Create New Document</Button>
 	</div>
 </header>
