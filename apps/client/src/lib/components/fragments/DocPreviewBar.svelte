@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Card, CloseButton } from 'flowbite-svelte';
-
 	import Button from '../ui/Button.svelte';
 
 	// export let selectedDoc: string;
@@ -20,8 +19,8 @@
 			<div>Some details about document</div>
 		</div>
 		<div class="flex gap-4 w-full">
-			<Button buttonClass="w-full" color="alternative">Delete Document</Button>
-			<Button buttonClass="w-full" color="primary">View Document</Button>
+			<Button buttonClass="w-full" color="white">Delete Document</Button>
+			<Button buttonClass="w-full" color="yellow">View Document</Button>
 		</div>
 	</div>
 	<!-- {:else}
