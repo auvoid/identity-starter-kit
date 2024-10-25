@@ -57,8 +57,8 @@
 		></Input>
 	</div>
 	<div class="flex w-full gap-2">
-		<Button buttonClass="w-full" color="primary" on:click={handleSignup}>Signup</Button>
-		<Button buttonClass="w-full" color="alternative" on:click={() => goto('/')}>Cancel</Button>
+		<Button buttonClass="w-full" color="yellow" on:click={handleSignup}>Signup</Button>
+		<Button buttonClass="w-full" color="white" on:click={() => goto('/')}>Cancel</Button>
 	</div>
 	<small class="w-full">
 		<p>Already have an account? <a class="text-brand-green" href="/login">Login</a></p>

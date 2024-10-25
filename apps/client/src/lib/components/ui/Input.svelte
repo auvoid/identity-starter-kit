@@ -20,7 +20,7 @@
 	export let value: string;
 	export let classExtras: string = '';
 
-	let inputClass = `focus:border-brand-green focus:ring-brand-green  bg-gray-200 ` + classExtras;
+	let inputClass = `focus:border-brand-green focus:ring-brand-green bg-gray-200 ` + classExtras;
 </script>
 
 <div class="flex gap-1">
