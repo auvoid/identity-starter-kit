@@ -2,7 +2,6 @@
 	import DocPreviewBar from '$lib/components/fragments/DocPreviewBar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { Card, Li, Modal } from 'flowbite-svelte';
-	import { addToast } from '../../store';
 	import Step1 from './steps/step1.svelte';
 	import Step2 from './steps/step2.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
