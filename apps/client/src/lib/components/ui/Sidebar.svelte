@@ -14,7 +14,7 @@
 
 <Sidebar {activeUrl}>
 	<SidebarWrapper
-		class="shadow-xl h-[calc(100vh-130px)] fixed top-[88px] w-64 bg-white border flex flex-col justify-between"
+		class="shadow-xl h-[calc(100vh-130px)] w-64 bg-white border flex flex-col justify-between"
 	>
 		<div>
 			<SidebarGroup>
@@ -24,7 +24,7 @@
 						<h2 class="text-lg font-semibold">User name</h2>
 					</div>
 				</div>
-				<SidebarItem label="Documents">
+				<SidebarItem href="/dashboard" active={activeUrl === '/dashboard'} label="Documents">
 					<svelte:fragment slot="icon">
 						<ChartPieSolid
 							class="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900"
