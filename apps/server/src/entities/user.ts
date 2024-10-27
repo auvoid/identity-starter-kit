@@ -1,6 +1,17 @@
-import { AfterLoad, BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
-import { BaseEntity } from './base-entity';
+import {
+  AfterLoad,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  Relation,
+} from 'typeorm';
 import { hash, verify } from 'argon2';
+import { BaseEntity } from './base-entity';
+import { Session } from './session';
 
 @Entity()
 export class User extends BaseEntity {
@@ -9,6 +20,15 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @Column({ nullable: true, unique: true })
+  did: string;
+
+  @OneToMany(() => Session, (e) => e.user, { onDelete: 'CASCADE' })
+  sessions: Relation<Session[]>;
+
+  @Column({ default: false, nullable: false })
+  emailVerified: boolean;
 
   private tempPassword: string;
   @AfterLoad()

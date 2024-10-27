@@ -11,7 +11,7 @@ import {
 import { User } from '../../entities/user';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private repository: Repository<User>,
