@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import {
 		Card,
@@ -9,8 +8,7 @@
 		Toolbar,
 		ToolbarGroup,
 		ToolbarButton,
-		Helper,
-		Li
+		Helper
 	} from 'flowbite-svelte';
 	import {
 		CalendarMonthSolid,
@@ -25,9 +23,9 @@
 		UploadOutline
 	} from 'flowbite-svelte-icons';
 
-	let docName: string;
-	let signingParties: string[];
-	let emailContent: string;
+	export let docName: string;
+	export let signingParties: string[];
+	export let emailContent: string;
 </script>
 
 <main class="w-full flex gap-5">
@@ -115,38 +113,6 @@
 							</Helper>
 						</div>
 					</div>
-				</div>
-			</div>
-		</Card>
-		<Card class="min-w-[450px] shadow-xl h-[calc(100vh-130px)]">
-			<div class="flex flex-col h-full justify-between">
-				<div class="flex flex-col gap-5">
-					<div class="flex flex-col">
-						<h3 class="font-sm font-semibold text-gray-700 dark:text-gray-400">Document Name</h3>
-						<p>{docName ?? 'My New Document'}</p>
-					</div>
-					<div class="flex flex-col">
-						<h3 class="font-sm font-semibold text-gray-700 dark:text-gray-400">Signing Parties</h3>
-						{#each signingParties as party}
-							<div>
-								<Li>{party}</Li>
-							</div>
-						{/each}
-					</div>
-					<div>
-						<h3 class="font-sm font-semibold text-gray-700 dark:text-gray-400">PDF File</h3>
-						<div>MyPdfFile.pdf (file displayed and on click opens on screen)</div>
-					</div>
-					<div>
-						<h3 class="font-sm font-semibold text-gray-700 dark:text-gray-400">Your Message</h3>
-						<p>
-							{emailContent}
-						</p>
-					</div>
-				</div>
-				<div class="flex gap-4 w-full">
-					<Button buttonClass="w-full" color="white">Save as Draft</Button>
-					<Button buttonClass="w-full" color="yellow">Continue to Edit Document</Button>
 				</div>
 			</div>
 		</Card>

@@ -24,7 +24,7 @@
 						<h2 class="text-lg font-semibold">User name</h2>
 					</div>
 				</div>
-				<SidebarItem label="Documents">
+				<SidebarItem href="/dashboard" active={activeUrl === '/dashboard'} label="Documents">
 					<svelte:fragment slot="icon">
 						<ChartPieSolid
 							class="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900"
