@@ -17,6 +17,8 @@ services:
             - node_modules
         - action: rebuild
           path: ./apps/client/package.json
+        - action: rebuild
+          path: ./packages
     depends_on:
       - server
   server:
@@ -35,5 +37,7 @@ services:
             - node_modules
         - action: rebuild
           path: ./apps/server/package.json
+        - action: rebuild
+          path: ./packages
     env_file:
       - .env

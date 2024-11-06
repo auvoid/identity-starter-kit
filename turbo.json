@@ -3,7 +3,7 @@
   "globalDependencies": [".env"],
   "tasks": {
     "build": {
-      "outputs": ["dist/**", "build/**"],
+      "outputs": ["dist/**", "build/**", ".svelte-kit/output/**"],
       "inputs": ["$TURBO_DEFAULT$", ".env"]
     },
     "check-types": {
