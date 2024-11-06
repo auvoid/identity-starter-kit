@@ -34,12 +34,35 @@ import {
   BaseCredOfferDTO,
   SiopRequestDTO,
 } from '@repo/dtos';
-import { DataSource } from 'typeorm';
 import { Serialize } from 'src/middlewares/interceptors/serialize.interceptors';
-import { PresentationDefinitionV2 } from '@sphereon/pex-models';
 import { Request } from 'express';
 import { getResolver } from 'src/utils';
 import { stat } from 'fs';
+
+const presentationDefinition = {
+  id: 'exampleCredRequest',
+  purpose:
+    "To gather all available verifiable credentials from the holder's wallet",
+  input_descriptors: [
+    {
+      id: `credRequest`,
+      constraints: {
+        fields: [
+          {
+            path: ['$.vc.type'],
+            filter: {
+              type: 'array',
+              contains: {
+                type: 'string',
+                pattern: 'Participation Badge',
+              },
+            },
+          },
+        ],
+      },
+    },
+  ],
+};
 
 @ApiTags('OpenID')
 @ApiExcludeController()
@@ -66,6 +89,38 @@ export class Oid4vcController {
         process.env.PUBLIC_BASE_URI,
       ).toString(),
       responseType: 'id_token',
+    });
+
+    const offerExists = await this.siopOfferService.findById(session.id);
+    if (offerExists) {
+      await this.siopOfferService.findByIdAndUpdate(session.id, {
+        request: siopRequest.request,
+      });
+    } else {
+      await this.siopOfferService.create({
+        id: session.id,
+        request: siopRequest.request,
+      });
+    }
+    return siopRequest;
+  }
+
+  @Serialize(SiopOfferDTO)
+  @ApiOkResponse({ type: SiopOfferDTO })
+  @Get('/pex')
+  async newPex(@UserSession() session: Session) {
+    const state = session.id;
+    let siopRequest = await (
+      await this.identityService.getAdminDid()
+    ).rp.createRequest({
+      state,
+      requestBy: 'reference',
+      requestUri: new URL(
+        `/api/oid4vc/siop/${session.id}`,
+        process.env.PUBLIC_BASE_URI,
+      ).toString(),
+      responseType: 'vp_token',
+      presentationDefinition,
     });
 
     const offerExists = await this.siopOfferService.findById(session.id);
@@ -170,12 +225,13 @@ export class Oid4vcController {
      * UNCOMMENT THIS FOR BADGE
      */
 
+    const badgeName: string = 'ExampleBadge';
     const verifiableCredential = await identity.account.credentials.createBadge(
       {
         recipientDid: did,
         body: {},
         description: '',
-        badgeName: 'Example Badge',
+        badgeName,
         criteria: '',
         image: 'https://app.auvo.io/images/Logo.png',
         id: new URL(
@@ -184,7 +240,7 @@ export class Oid4vcController {
         ).toString(),
         keyIndex: 0,
         issuerName: 'ExampleOrg',
-        type: 'ExampleOrg',
+        type: badgeName,
       },
     );
     const response = await identity.issuer.createSendCredentialsResponse({
@@ -213,10 +269,11 @@ export class Oid4vcController {
     // return response;
   }
 
-  @ApiBody({ type: SiopRequestDTO })
   @Post('/auth')
-  async verifyAuthResponse(@Body() body: SiopRequestDTO) {
+  async verifyAuthResponse(@Body() body: any) {
     const { state } = body;
+    console.log(state);
+
     const { id_token: idToken, vp_token: vpToken } = body;
     const { rp } = await this.identityService.getAdminDid();
     console.log(state);
@@ -224,9 +281,9 @@ export class Oid4vcController {
       await rp.verifyAuthResponse(body);
       const { iss } = await rp.validateJwt(idToken);
     } else if (vpToken) {
-      await rp.verifyAuthResponse(body);
-      const { iss } = await rp.validateJwt(idToken);
-      console.log('issuer', iss);
+      await rp.verifyAuthResponse(body, presentationDefinition);
+      const { iss } = await rp.validateJwt(vpToken);
+      wsServer.broadcast(state, { success: true });
     }
   }
 }
