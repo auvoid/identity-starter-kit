@@ -16,8 +16,11 @@ const { readFile, writeFile } = promises;
 
 function constructSimpleStore() {
   const reader = async () => {
-    const raw = await readFile(
-      path.join(process.env.IDENTITY_PATH, './simple-store'),
+    const raw = await readFile(path.join(__dirname, './simple-store')).catch(
+      async () => {
+        await writer([]);
+        return '[]';
+      },
     );
     try {
       return JSON.parse(raw.toString());
@@ -28,7 +31,7 @@ function constructSimpleStore() {
 
   const writer = async (data: { id: string; pin: number }[]) => {
     await writeFile(
-      path.join(process.env.IDENTITY_PATH, './simple-store'),
+      path.join(__dirname, './simple-store'),
       JSON.stringify(data),
     );
   };
@@ -208,7 +211,7 @@ export class IdentityService {
     const identity = await this.newDid({
       alias,
       seed,
-      method: 'web',
+      method: 'key',
     }).catch(async (e) => {
       if (!e.message.includes('Alias already exists')) {
         console.log(e);
