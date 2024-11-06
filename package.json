@@ -18,5 +18,8 @@
   },
   "dependencies": {
     "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "turbo": "^2.2.3"
   }
 }
