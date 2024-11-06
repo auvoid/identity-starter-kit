@@ -10,15 +10,11 @@
 >
 	<div class="flex gap-2 items-center">
 		<Logo></Logo>
-		<h1 class="text-2xl font-semibold select-none text-gray-700">Syner</h1>
 	</div>
 	<div class="w-2/5">
 		<Search
 			class="w-full text-ellipsis rounded-lg py-[12px] focus:border-brand-green focus:ring-brand-green"
 			size="md"
 		></Search>
-	</div>
-	<div>
-		<Button color="yellow" on on:click={() => goto('/new-document')}>Create New Document</Button>
 	</div>
 </header>

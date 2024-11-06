@@ -39,6 +39,7 @@ import { Serialize } from 'src/middlewares/interceptors/serialize.interceptors';
 import { PresentationDefinitionV2 } from '@sphereon/pex-models';
 import { Request } from 'express';
 import { getResolver } from 'src/utils';
+import { stat } from 'fs';
 
 @ApiTags('OpenID')
 @ApiExcludeController()
@@ -90,7 +91,7 @@ export class Oid4vcController {
   }
 
   @Serialize(TokenResponseDTO)
-  @Post('/:identity/token')
+  @Post('/token')
   @ApiOkResponse({ type: TokenResponseDTO })
   @ApiNotFoundResponse({ type: NotFoundException })
   @ApiInternalServerErrorResponse({ type: InternalServerErrorException })
@@ -107,20 +108,16 @@ export class Oid4vcController {
   @ApiOkResponse({ type: CredOfferDTO })
   @ApiNotFoundResponse({ type: NotFoundException })
   @Get('/credentials/offer')
-  async createCredentialOffer(
-    @Param('id') id: string,
-    @UserSession() session: Session,
-  ) {
+  async createCredentialOffer(@UserSession() session: Session) {
     // Fill the crdential name here or create logic to fill it out :)
-    const credentialName = '';
     const { issuer } = await this.identityService.getAdminDid();
 
     const offer = await issuer.createCredentialOffer(
       {
-        credentials: [credentialName],
+        credentials: ['ExampleBadge'],
         requestBy: 'reference',
         credentialOfferUri: new URL(
-          `/api/oid4vc/offers/${id}`,
+          `/api/oid4vc/offers/${session.id}`,
           process.env.PUBLIC_BASE_URI,
         ).toString(),
         pinRequired: false,
@@ -129,13 +126,13 @@ export class Oid4vcController {
         state: session.id,
       },
     );
-    const offerExists = await this.credOfferService.findById(id);
+    const offerExists = await this.credOfferService.findById(session.id);
     if (!offerExists) {
       await this.credOfferService
-        .create({ id, offer: offer.offer })
+        .create({ id: session.id, offer: offer.offer })
         .catch(() => null);
     } else {
-      await this.credOfferService.findByIdAndUpdate(id, {
+      await this.credOfferService.findByIdAndUpdate(session.id, {
         offer: offer.offer,
       });
     }
@@ -173,28 +170,29 @@ export class Oid4vcController {
      * UNCOMMENT THIS FOR BADGE
      */
 
-    // const verifiableCredential =
-    //   await identity.account.credentials.createBadge({
-    //     recipientDid: did,
-    //     body: {
-    //       ...application.body,
-    //     },
-    //     expiryDate,
-    //     description: "",
-    //     badgeName: credentialName;,
-    //     criteria: "",
-    //     image: "",
-    //     id: `urn:uuid:${uuidv4()}`,
-    //     keyIndex: 0,
-    //     issuerName: application.organization.name,
-    //     type: application.template.name,
-    //   });
-    // const response = await identity.issuer.createSendCredentialsResponse({
-    //   credentials: [verifiableCredential.cred],
-    // });
+    const verifiableCredential = await identity.account.credentials.createBadge(
+      {
+        recipientDid: did,
+        body: {},
+        description: '',
+        badgeName: 'Example Badge',
+        criteria: '',
+        image: 'https://app.auvo.io/images/Logo.png',
+        id: new URL(
+          `/credentials/${uuidv4()}`,
+          process.env.PUBLIC_BASE_URI,
+        ).toString(),
+        keyIndex: 0,
+        issuerName: 'ExampleOrg',
+        type: 'ExampleOrg',
+      },
+    );
+    const response = await identity.issuer.createSendCredentialsResponse({
+      credentials: [verifiableCredential.cred],
+    });
 
-    //   wsServer.broadcast(payload.state, { credential: true });
-    //   return response;
+    wsServer.broadcast(payload.state, { credential: true });
+    return response;
 
     /**
      * UNCOMMENT THIS FOR VEFIFIABLE CREDENTIAL
@@ -220,10 +218,15 @@ export class Oid4vcController {
   async verifyAuthResponse(@Body() body: SiopRequestDTO) {
     const { state } = body;
     const { id_token: idToken, vp_token: vpToken } = body;
+    const { rp } = await this.identityService.getAdminDid();
+    console.log(state);
     if (idToken) {
-      const { rp } = await this.identityService.getAdminDid();
       await rp.verifyAuthResponse(body);
       const { iss } = await rp.validateJwt(idToken);
+    } else if (vpToken) {
+      await rp.verifyAuthResponse(body);
+      const { iss } = await rp.validateJwt(idToken);
+      console.log('issuer', iss);
     }
   }
 }

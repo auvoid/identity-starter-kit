@@ -48,7 +48,7 @@ services:
       watch:
         - action: sync
           path: ./apps/server
-          target: /usr/src/app/core-api
+          target: /usr/src/app/server
           ignore:
             - node_modules
         - action: rebuild
