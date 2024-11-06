@@ -6,6 +6,8 @@ import {
   NotFoundException,
   Param,
   Post,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -15,6 +17,7 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 import { wsServer } from '../../main';
 import { IdentityService } from '../../services/identity.service';
 import { UserSession } from '../../decorators/UserSession';
@@ -34,6 +37,8 @@ import {
 import { DataSource } from 'typeorm';
 import { Serialize } from 'src/middlewares/interceptors/serialize.interceptors';
 import { PresentationDefinitionV2 } from '@sphereon/pex-models';
+import { Request } from 'express';
+import { getResolver } from 'src/utils';
 
 @ApiTags('OpenID')
 @ApiExcludeController()
@@ -43,9 +48,6 @@ export class Oid4vcController {
     private identityService: IdentityService,
     private siopOfferService: SiopOfferService,
     private credOfferService: CredOfferService,
-    private usersService: UsersService,
-    private sessionsService: SessionsService,
-    private dataSource: DataSource,
   ) {}
 
   @Serialize(SiopOfferDTO)
@@ -101,54 +103,44 @@ export class Oid4vcController {
     return response;
   }
 
-  // @Serialize(CredOfferDTO)
-  // @ApiOkResponse({ type: CredOfferDTO })
-  // @ApiNotFoundResponse({ type: NotFoundException })
-  // @Get('/credentials/:id')
-  // async createCredentialOffer(
-  //   @Param('id') id: string,
-  //   @UserSession() session: Session,
-  // ) {
-  //   const application = await this.applicationsService.findById(id, {
-  //     template: {
-  //       defaultSigningIdentity: true,
-  //     },
-  //     user: true,
-  //     organization: true,
-  //   });
-  //   if (application.status !== 'approved')
-  //     throw new BadRequestException(errors.oid.NOT_APPROVED);
-  //   const { issuer } = await this.identityService.getDid({
-  //     did: application.template.defaultSigningIdentity.did,
-  //   });
+  @Serialize(CredOfferDTO)
+  @ApiOkResponse({ type: CredOfferDTO })
+  @ApiNotFoundResponse({ type: NotFoundException })
+  @Get('/credentials/offer')
+  async createCredentialOffer(
+    @Param('id') id: string,
+    @UserSession() session: Session,
+  ) {
+    // Fill the crdential name here or create logic to fill it out :)
+    const credentialName = '';
+    const { issuer } = await this.identityService.getAdminDid();
 
-  //   const offer = await issuer.createCredentialOffer(
-  //     {
-  //       credentials: [application.template.name],
-  //       requestBy: 'reference',
-  //       credentialOfferUri: new URL(
-  //         `/api/oid4vc/offers/${id}`,
-  //         process.env.PUBLIC_BASE_URI,
-  //       ).toString(),
-  //       pinRequired: false,
-  //     },
-  //     {
-  //       applicationId: application.id,
-  //       state: session.id,
-  //     },
-  //   );
-  //   const offerExists = await this.credOfferService.findById(id);
-  //   if (!offerExists) {
-  //     await this.credOfferService
-  //       .create({ id, offer: offer.offer })
-  //       .catch(() => null);
-  //   } else {
-  //     await this.credOfferService.findByIdAndUpdate(id, {
-  //       offer: offer.offer,
-  //     });
-  //   }
-  //   return offer;
-  // }
+    const offer = await issuer.createCredentialOffer(
+      {
+        credentials: [credentialName],
+        requestBy: 'reference',
+        credentialOfferUri: new URL(
+          `/api/oid4vc/offers/${id}`,
+          process.env.PUBLIC_BASE_URI,
+        ).toString(),
+        pinRequired: false,
+      },
+      {
+        state: session.id,
+      },
+    );
+    const offerExists = await this.credOfferService.findById(id);
+    if (!offerExists) {
+      await this.credOfferService
+        .create({ id, offer: offer.offer })
+        .catch(() => null);
+    } else {
+      await this.credOfferService.findByIdAndUpdate(id, {
+        offer: offer.offer,
+      });
+    }
+    return offer;
+  }
 
   @Serialize(BaseCredOfferDTO)
   @Get('/offers/:id')
@@ -159,146 +151,69 @@ export class Oid4vcController {
     return offer;
   }
 
-  //   @Post('/credential')
-  //   async sendCredential(@Req() req: Request) {
-  //     const didJWT = await import('did-jwt');
-  //     const token = req.headers.authorization?.split('Bearer ')[1];
-  //     const resolver = await getResolver();
-  //     if (!token) throw new UnauthorizedException(errors.oid.NO_TOKEN);
-  //     const { payload } = await didJWT.verifyJWT(token, {
-  //       policies: { aud: false },
-  //       resolver,
-  //     });
-  //     const application = await this.applicationsService.findById(
-  //       payload.applicationId,
-  //       {
-  //         credentialIssuance: true,
-  //         user: true,
-  //       },
-  //     );
-  //     if (application.status !== 'approved')
-  //       throw new BadRequestException(errors.oid.NOT_APPROVED);
-  //     const identity = await this.identityService.getDid({
-  //       did: application.template.defaultSigningIdentity.did,
-  //     });
+  @Post('/credential')
+  async sendCredential(@Req() req: Request) {
+    const didJWT = await import('did-jwt');
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    const resolver = await getResolver();
+    if (!token) throw new UnauthorizedException('No token');
+    const { payload } = await didJWT.verifyJWT(token, {
+      policies: { aud: false },
+      resolver,
+    });
 
-  //     const did = await identity.issuer.validateCredentialsResponse({
-  //       token,
-  //       proof: req.body.proof.jwt,
-  //     });
+    const identity = await this.identityService.getAdminDid();
 
-  //     let user: User;
-  //     if (!application.user) {
-  //       user = await this.usersService.findOne({ did });
-  //       if (!user) {
-  //         user = await this.usersService.create({ did });
-  //       }
-  //     }
-  //     const { applicationIndex } = application.credentialIssuance;
-  //     const credentialTemplate = application.template;
-  //     if (!application.claimed) {
-  //       await this.dataSource.manager.transaction(async (t) => {
-  //         const credential = await this.templatesService.findById(
-  //           application.template.id,
-  //         );
-  //         const buffer = await Bitstring.decodeBits({
-  //           encoded: credential.encodedList,
-  //         });
-  //         const bitstring = new Bitstring({ buffer });
-  //         bitstring.set(applicationIndex, true);
-  //         const encoded = await bitstring.encodeBits();
-  //         credential.encodedList = encoded;
-  //         application.claimed = true;
-  //         await t.save(application);
-  //         await t.save(credential);
-  //       });
-  //     }
+    const did = await identity.issuer.validateCredentialsResponse({
+      token,
+      proof: req.body.proof.jwt,
+    });
 
-  //     const url = new URL(
-  //       `/api/credentials/${application.template.id}/status/1`,
-  //       process.env.PUBLIC_BASE_URI,
-  //     ).toString();
+    /**
+     * UNCOMMENT THIS FOR BADGE
+     */
 
-  //     if (!application.user) {
-  //       await this.applicationsService.findByIdAndUpdate(application.id, {
-  //         user,
-  //       });
-  //     }
-  //     const _credential = application.template;
+    // const verifiableCredential =
+    //   await identity.account.credentials.createBadge({
+    //     recipientDid: did,
+    //     body: {
+    //       ...application.body,
+    //     },
+    //     expiryDate,
+    //     description: "",
+    //     badgeName: credentialName;,
+    //     criteria: "",
+    //     image: "",
+    //     id: `urn:uuid:${uuidv4()}`,
+    //     keyIndex: 0,
+    //     issuerName: application.organization.name,
+    //     type: application.template.name,
+    //   });
+    // const response = await identity.issuer.createSendCredentialsResponse({
+    //   credentials: [verifiableCredential.cred],
+    // });
 
-  //     const approval = Math.floor(application.approvalTimeStamp.getTime() / 1000);
+    //   wsServer.broadcast(payload.state, { credential: true });
+    //   return response;
 
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore
-  //     const expiryDate = parseInt(approval) + parseInt(_credential.duration);
+    /**
+     * UNCOMMENT THIS FOR VEFIFIABLE CREDENTIAL
+     */
 
-  //     if (application.template.type === 'badge') {
-  //       const verifiableCredential =
-  //         await identity.account.credentials.createBadge({
-  //           recipientDid: did,
-  //           extras: {
-  //             credentialStatus: {
-  //               id: url + `#${applicationIndex}`,
-  //               type: 'BitstringStatusListEntry',
-  //               purpose: 'revocation',
-  //               statusListIndex: applicationIndex.toString(),
-  //               statusListCredential: url,
-  //             },
-  //           },
-  //           body: {
-  //             ...application.body,
-  //           },
-  //           expiryDate,
-  //           description: credentialTemplate.badgeFields.description,
-  //           badgeName: credentialTemplate.name,
-  //           criteria: credentialTemplate.badgeFields.criteria,
-  //           image: credentialTemplate.icon,
-  //           id: `https://${application.template.defaultSigningIdentity.url}/verify/${application.id}`,
-  //           keyIndex: 0,
-  //           issuerName: application.organization.name,
-  //           type: application.template.name,
-  //         });
-  //       const response = await identity.issuer.createSendCredentialsResponse({
-  //         credentials: [verifiableCredential.cred],
-  //       });
+    // const verifiableCredential = await identity.account.credentials.create({
+    //   recipientDid: did,
+    //   body: { },
+    //   id: `urn:uuid:${uuidv4()}`,
+    //   keyIndex: 0,
+    //   type: credentialName,
+    // });
+    // const response = await identity.issuer.createSendCredentialsResponse({
+    //   credentials: [verifiableCredential.cred],
+    // });
 
-  //       wsServer.broadcast(payload.state, { credential: true });
-  //       return response;
-  //     } else {
-  //       const verifiableCredential = await identity.account.credentials.create({
-  //         recipientDid: did,
-  //         extras: {
-  //           credentialStatus: {
-  //             id: url + `#${applicationIndex}`,
-  //             type: 'BitstringStatusListEntry',
-  //             purpose: 'revocation',
-  //             statusListIndex: applicationIndex.toString(),
-  //             statusListCredential: url,
-  //           },
-  //         },
-  //         expiryDate,
-  //         body: {
-  //           ...application.template.prefilledFields,
-  //           ...application.body,
-  //           enrichment: {
-  //             logo_uri:
-  //               application.template.icon ??
-  //               application.organization.logo ??
-  //               null,
-  //           },
-  //         },
-  //         id: `https://${application.template.defaultSigningIdentity.url}/verify/${application.id}`,
-  //         keyIndex: 0,
-  //         type: application.template.name,
-  //       });
-  //       const response = await identity.issuer.createSendCredentialsResponse({
-  //         credentials: [verifiableCredential.cred],
-  //       });
-
-  //       wsServer.broadcast(payload.state, { credential: true });
-  //       return response;
-  //     }
-  //   }
+    // wsServer.broadcast(payload.state, { credential: true });
+    // return response;
+  }
 
   @ApiBody({ type: SiopRequestDTO })
   @Post('/auth')

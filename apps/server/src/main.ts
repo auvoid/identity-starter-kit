@@ -20,8 +20,6 @@ async function initializeApp() {
       '/.well-known/did.json',
       '/.well-known/acme-challenge/:token',
       '/:did/.well-known/did.json',
-      // '/:did/.well-known/oauth-authorization-server',
-      // '/:did/.well-known/openid-credential-issuer',
     ],
   });
   const config = new DocumentBuilder()

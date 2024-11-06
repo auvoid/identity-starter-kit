@@ -1,4 +1,16 @@
 services:
+  db:
+    networks:
+      - host-bridge
+    container_name: db
+    image: postgres:15.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD-password}
+    volumes:
+      - ~/data/starter/db:/var/lib/postgresql/data
+    ports:
+      - 5434:5432 
   client:
     container_name: client
     networks:
@@ -30,6 +42,8 @@ services:
       dockerfile: ./docker/dev/Dockerfile.server
     ports:
       - 1209:1209
+    depends_on:
+      - db
     develop:
       watch:
         - action: sync
