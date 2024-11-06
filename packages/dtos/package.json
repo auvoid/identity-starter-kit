@@ -7,13 +7,13 @@
         "build": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-        "check-types": "tsc --noEmit"
+        "check-types": "tsc --noEmit",
+        "prepare": "nest build"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@nestjs/cli": "^10.0.0",
         "typescript": "^5.6.3"
     },
     "dependencies": {
@@ -21,7 +21,8 @@
         "@nestjs/swagger": "^7.3.1",
         "@sphereon/pex-models": "2.0.3",
         "class-transformer": "^0.5.1",
-        "class-validator": "^0.14.1"
+        "class-validator": "^0.14.1",
+        "@nestjs/cli": "^10.0.0"
     },
     "main": "./src/index.ts",
     "exports": {

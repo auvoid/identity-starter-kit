@@ -1,8 +1,6 @@
 services:
   client:
     container_name: client
-    networks:
-      - host-bridge
     build:
       context: .
       dockerfile: ./docker/dev/Dockerfile.client
@@ -14,7 +12,7 @@ services:
       watch:
         - action: sync
           path: ./apps/client
-          target: /usr/src/app/client
+          target: /usr/src/app/apps/client
           ignore:
             - node_modules
         - action: rebuild
@@ -22,8 +20,6 @@ services:
     depends_on:
       - server
   server:
-    networks:
-      - host-bridge
     container_name: server
     build:
       context: .
@@ -34,14 +30,10 @@ services:
       watch:
         - action: sync
           path: ./apps/server
-          target: /usr/src/app/core-api
+          target: /usr/src/app/apps/server
           ignore:
             - node_modules
         - action: rebuild
           path: ./apps/server/package.json
     env_file:
       - .env
-
-networks:
-  host-bridge:
-    driver: bridge
